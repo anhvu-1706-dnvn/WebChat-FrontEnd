@@ -1,6 +1,6 @@
 import { Button } from '@material-ui/core';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useHistory } from 'react-router-dom';
 import axios from "axios"
@@ -23,6 +23,10 @@ function UIChat() {
   const [text, setText] = useState('');
   const [socket,setSocket ] = useState(null);
   const [conversationId, setConversationId] = useState();
+  const [newContact, setNewContact] = useState('')
+  const setRef = useCallback(node => {
+    if (node) node.scrollIntoView({smooth: true})
+  },[])
   useEffect( () => {
     const newSocket = io(process.env.REACT_APP_API_SOCKET)
     setSocket(newSocket);
@@ -63,7 +67,7 @@ function UIChat() {
       ...message,
       {conversationId: conversationId, text, name }
     ])
-    socket.emit('send-message',{conversationId: conversationId, text, token })
+    socket.emit('send-message',{conversationId: conversationId, text, token, name })
     setText('');
   }
   const showConversation = async (id) => {
@@ -73,12 +77,29 @@ function UIChat() {
       'conversationId': id,
     }
     const res = await axios.get(`${process.env.REACT_APP_API_ENDPOINT}/conversation/message`, {headers});
-    console.log(res.data);
     setMessage(res.data.arrayMes);
     socket.emit('join-room', {conversationId: id})
     setConversationId(id);
     //console.log(res)
   }
+  const addContact = async () => {
+    console.log(newContact);
+    const dataPost = {
+      recipientName: newContact,
+      text: 'Hello there'
+    }
+    const headers = {
+        'Content-Type': 'application/json',
+        token: token,
+    };
+    try {
+      const res = await axios.post(`${process.env.REACT_APP_API_ENDPOINT}/conversation`, dataPost, {headers});
+      console.log(res);
+    } catch (err) {
+      console.error(err);
+    }
+    }
+  
   return !loading ?  (
      <div className="container">
 <h3 className=" text-center">Messaging</h3>
@@ -86,12 +107,12 @@ function UIChat() {
       <div className="inbox_msg">
         <div className="inbox_people">
           <div className="headind_srch">
-            <div className="recent_heading">
+            <div className="recent_heading" onClick={() => addContact()}>
               <h4>Add Contact</h4>
             </div>
             <div className="srch_bar">
               <div className="stylish-input-group">
-                <input type="text" className="search-bar"  placeholder="Search" />
+                <input type="text" className="search-bar"  placeholder="Input name " onChange = {(e) => setNewContact(e.target.value)}/>
                 <span className="input-group-addon">
                 <button type="button"> <i className="fa fa-search" aria-hidden="true"></i> </button>
                 </span> </div>
@@ -121,16 +142,17 @@ function UIChat() {
         </div>
         <div className="mesgs">
           <div className="msg_history">
-            {message.map(mes => {
+            {message.map((mes,index) => {
+              const lastMessage = message.length - 1 === index;
               if(mes.name === name) return (
-                <div className="outgoing_msg">
+                <div className="outgoing_msg" ref={lastMessage ? setRef : null} key = {index}>
               <div className="sent_msg">
               <p>{mes.text}</p>
               <span className="time_date"> {mes.name}</span></div>
             </div>
               )
               else return (
-                <div className="incoming_msg">
+                <div className="incoming_msg"ref={lastMessage ? setRef : null}>
                 <div className="incoming_msg_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"/> </div>
                 <div className="received_msg">
                   <div className="received_withd_msg">
