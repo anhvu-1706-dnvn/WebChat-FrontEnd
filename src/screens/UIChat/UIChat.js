@@ -13,9 +13,10 @@ function UIChat() {
   const name = localStorage.getItem('name')
   const dispatch = useDispatch();
   const history = useHistory();
-  const users = useSelector(state => state.user.users);
+  // const users = useSelector(state => state.user.users);
   const conversations = useSelector(state => state.conversation.conversation)
-  const loading = useSelector(state => state.conversation.loading)
+  // const loading = useSelector(state => state.conversation.loading)
+  const [loading, setLoading] = useState(true)
   const listConversationSuccess = useSelector(state => state.conversation.listConversationSuccess);
   const token = localStorage.getItem('token');
   const [isActive, setIsActive] = useState(0);
@@ -24,6 +25,7 @@ function UIChat() {
   const [socket,setSocket ] = useState(null);
   const [conversationId, setConversationId] = useState();
   const [newContact, setNewContact] = useState('')
+  const [localConversation, setLocalConversation] = useState([]);
   const setRef = useCallback(node => {
     if (node) node.scrollIntoView({smooth: true})
   },[])
@@ -32,43 +34,72 @@ function UIChat() {
     setSocket(newSocket);
     dispatch(getListUserExceptMe(token))
     dispatch(getConversation(token))
+
     return () => newSocket.close();
-  }, [])
+  }, [dispatch])
   const updateMessage = () => {
     if(socket === null) return;
-    console.log('mess: ',message);
+    // console.log('mess: ',message);
     socket.on('receiveMsg', data => {
-      console.log('data',data)
+      const arr = [...localConversation];
+      console.log('ARR', arr)
       setMessage(prevMessage => [
         ...prevMessage,
         {conversationId: data.conversationId, 
         text: data.text, 
         name: data.name}
       ])
+      arr.map(a => {
+        if (a.lastMessage.conversationId === data.conversationId) {
+          a.lastMessage.text = data.text;
+        }
+        return a;
+      })
+      setLocalConversation([...arr]);
+      console.log(localConversation)
+    
     })
   }
   useEffect(() => {
     updateMessage();
-  }, [socket, setMessage])
+  }, [socket, setMessage, setLocalConversation])
   useEffect(async() => {
     if(listConversationSuccess) {
       await showConversation(conversations[0]._id)
     } 
    else return;
   }, [listConversationSuccess])
+  useEffect(() => {
+    if (listConversationSuccess) {
+      setLocalConversation([...conversations])
+      console.log(localConversation, loading)
+      setLoading(false);
+    }
+  }, [listConversationSuccess,setLocalConversation])
   const handleClick = () => {
     dispatch(Logout(history));
   }
   const handleHover = (index) => {
     setIsActive(index);
+    // console.log(localConversation)
   }
   const sendMessage = (text) => {
+    const arr = [...localConversation];
     setMessage([
       ...message,
       {conversationId: conversationId, text, name }
     ])
+    arr.map(a => {
+      if (a.lastMessage.conversationId === conversationId) {
+        a.lastMessage.text = text;
+      }
+      return a;
+    })
+    setLocalConversation([...arr]);
+    console.log(localConversation)
     socket.emit('send-message',{conversationId: conversationId, text, token, name })
     setText('');
+    // setLastMessages(text);
   }
   const showConversation = async (id) => {
     setMessage([]);
@@ -94,10 +125,12 @@ function UIChat() {
     };
     try {
       const res = await axios.post(`${process.env.REACT_APP_API_ENDPOINT}/conversation`, dataPost, {headers});
-      console.log(res);
+     // console.log(res);
+      dispatch(getConversation(token))
     } catch (err) {
       console.error(err);
-    }
+    } 
+    
     }
   
   return !loading ?  (
@@ -119,7 +152,7 @@ function UIChat() {
             </div>
           </div>
           <div className="inbox_chat">
-             { conversations.map((conversation,index) => 
+             { localConversation.map((conversation,index) => 
                  {
                    return (
                 <div 
