@@ -29,20 +29,20 @@ function UIChat() {
   const setRef = useCallback(node => {
     if (node) node.scrollIntoView({smooth: true})
   },[])
+  
   useEffect( () => {
-    const newSocket = io(process.env.REACT_APP_API_SOCKET)
+    const newSocket = io(`${process.env.REACT_APP_API_SOCKET}/chat`)
     setSocket(newSocket);
     dispatch(getListUserExceptMe(token))
     dispatch(getConversation(token))
 
     return () => newSocket.close();
   }, [dispatch])
+ 
   const updateMessage = () => {
     if(socket === null) return;
-    // console.log('mess: ',message);
     socket.on('receiveMsg', data => {
       const arr = [...localConversation];
-      console.log('ARR', arr)
       setMessage(prevMessage => [
         ...prevMessage,
         {conversationId: data.conversationId, 
@@ -55,27 +55,27 @@ function UIChat() {
         }
         return a;
       })
-      setLocalConversation([...arr]);
-      console.log(localConversation)
-    
+      setLocalConversation([...arr]);   
     })
   }
   useEffect(() => {
     updateMessage();
   }, [socket, setMessage, setLocalConversation])
+  
   useEffect(async() => {
     if(listConversationSuccess) {
       await showConversation(conversations[0]._id)
     } 
    else return;
   }, [listConversationSuccess])
+  
   useEffect(() => {
     if (listConversationSuccess) {
       setLocalConversation([...conversations])
-      console.log(localConversation, loading)
       setLoading(false);
     }
   }, [listConversationSuccess,setLocalConversation])
+ 
   const handleClick = () => {
     dispatch(Logout(history));
   }
@@ -84,6 +84,7 @@ function UIChat() {
     // console.log(localConversation)
   }
   const sendMessage = (text) => {
+    if (socket === null || text === '') return;
     const arr = [...localConversation];
     setMessage([
       ...message,
@@ -96,12 +97,12 @@ function UIChat() {
       return a;
     })
     setLocalConversation([...arr]);
-    console.log(localConversation)
     socket.emit('send-message',{conversationId: conversationId, text, token, name })
     setText('');
     // setLastMessages(text);
   }
   const showConversation = async (id) => {
+    if (socket === null) return;
     setMessage([]);
     const headers = {
       'Content-Type': 'application/json',
@@ -200,7 +201,8 @@ function UIChat() {
           <div className="type_msg">
             <div className="input_msg_write">
               <input type="text" className="write_msg" placeholder="Type a message" value={text} onChange={(e) => setText(e.target.value)}/>
-              <button onClick = {(e)=> sendMessage(text)} className="msg_send_btn" type="button"><i className="fa fa-paper-plane-o" aria-hidden="true"></i></button>
+              <button onClick = {(e)=> sendMessage(text)} className="msg_send_btn" type="button"><i className="fas fa-paper-plane" aria-hidden="true"></i></button>
+              <button onClick={() => history.push({pathname: '/video', state: {conversationId}})}  className="msg_send_btn1" type="button"><i className="fas fa-video" aria-hidden="true"></i></button>
             </div>
           </div>
         </div>

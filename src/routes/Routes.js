@@ -6,6 +6,7 @@ import LandingPage from 'screens/LandingPage/LandingPage';
 import SignIn from 'screens/SignIn/SignIn';
 import Register from 'screens/Register/Register';
 import UIChat from 'screens/UIChat/UIChat';
+import VideoChat from 'screens/VideoChat/VideoChat';
 const history = createBrowserHistory();
 const PrivateRoute = ({component, ...rest}) => {
   const token = localStorage.getItem('token');
@@ -37,6 +38,7 @@ export default function Routes() {
         <Route  path = '/login' component={SignIn} />
         <Route  path = '/register' component={Register} />
         <PrivateRoute  path = '/chat' component={UIChat} />
+        <PrivateRoute  path = '/video' component={VideoChat} />
       </Switch>
     </Router>
   )
