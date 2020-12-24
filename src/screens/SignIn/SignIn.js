@@ -43,6 +43,12 @@ export default function SignIn(props) {
   const onLogin = () => {
     dispatch(Login({email, password}));
   }
+  const pressEnter = (e) => {
+    let code = e.keyCode || e.which;
+    if (code === 13) {
+      onLogin();
+    }
+  }
   const auth = useSelector(state => state.auth.isAuthenticated);
   useLayoutEffect(() => {
     if (auth) history.push('/chat');
@@ -50,13 +56,6 @@ export default function SignIn(props) {
   
   return (
     <div>
-      {/* <Header
-        absolute
-        color="transparent"
-        brand="Material Kit React"
-        rightLinks={<HeaderLinks />}
-        {...rest}
-      /> */}
       <div
         className={classes.pageHeader}
         style={{
@@ -129,6 +128,7 @@ export default function SignIn(props) {
                         fullWidth: true,
                       }}
                       inputProps={{
+                        onKeyPress: (e) => pressEnter(e),
                         onChange: (e) => setPassword(e.target.value),
                         type: "password",
                         endAdornment: (

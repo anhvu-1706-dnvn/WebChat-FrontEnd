@@ -4,7 +4,7 @@ import { makeStyles } from "@material-ui/core/styles";
 import {FaReact, FaNodeJs} from "react-icons/fa";
 // @material-ui/icons
 import Chat from "@material-ui/icons/Chat";
-import { SiSocketDotIo } from "react-icons/si";
+import { SiSocketDotIo,SiWebrtc } from "react-icons/si";
 import Fingerprint from "@material-ui/icons/Fingerprint";
 // core components
 import GridContainer from "components/Grid/GridContainer.js";
@@ -32,7 +32,7 @@ export default function ProductSection() {
       </GridContainer>
       <div>
         <GridContainer>
-          <GridItem xs={12} sm={12} md={4}>
+          <GridItem xs={12} sm={12} md={3}>
             <InfoArea
               title="SocketIO"
               description="Là một Module của NodeJS. Cung cấp cho lập trình viên các đặc trưng như event, room và tự động phục hồi lại kết nối. Đây là công cụ chính để tạo nên Các App/Web Chat "
@@ -41,7 +41,7 @@ export default function ProductSection() {
               vertical
             />
           </GridItem>
-          <GridItem xs={12} sm={12} md={4}>
+          <GridItem xs={12} sm={12} md={3}>
             <InfoArea
               title="ExpressJS"
               description="Là một Module của NodeJS. Cung cấp các thư viện cũng như công cụ để cấu thành Server phục vụ các hoạt động lưu trữ thông tin cũng như bảo mật thông tin"
@@ -50,11 +50,20 @@ export default function ProductSection() {
               vertical
             />
           </GridItem>
-          <GridItem xs={12} sm={12} md={4}>
+          <GridItem xs={12} sm={12} md={3}>
             <InfoArea
               title="ReactJS"
               description="Là Framework chính sử dụng để làm giao diện cho trang Web"
               icon={FaReact}
+              iconColor="info"
+              vertical
+            />
+          </GridItem>
+          <GridItem xs={12} sm={12} md={3}>
+            <InfoArea
+              title="WebRTC"
+              description="Là công cụ hỗ trợ do google cung cấp với mục đích sử dụng cho việc trao Video call cũng như trao đổi data."
+              icon={SiWebrtc}
               iconColor="info"
               vertical
             />

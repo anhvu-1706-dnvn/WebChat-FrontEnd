@@ -18,6 +18,7 @@ import CardBody from "components/Card/CardBody.js";
 import CardHeader from "components/Card/CardHeader.js";
 import CardFooter from "components/Card/CardFooter.js";
 import CustomInput from "components/CustomInput/CustomInput.js";
+import axios from "axios"
 
 import styles from "assets/jss/material-kit-react/views/loginPage.js";
 
@@ -39,22 +40,33 @@ export default function Register(props) {
   const [password,setPassword] = useState('');
   const classes = useStyles();
   const { ...rest } = props;
-  const handleSignup = () => {
+  const handleSignup = async () => {
     const userValues = {name,email,password}
     console.log(userValues)
-    return fetch(`${process.env.REACT_APP_API_ENDPOINT}/auth/signup`, {
-      method: 'POST',
-      headers: {
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(userValues),
-    })
-      .then((response) => response.json())
-      .then((json) => {
-      console.log(json);
+try {
 
-  })}
+  const res = axios.post(`${process.env.REACT_APP_API_ENDPOINT}/auth/signup`, userValues, {
+    headers: {
+      method: 'POST',
+      Accept: 'application/json',
+        'Content-Type': 'application/json',
+      }
+  })
+  alert ('Create Successfully')
+  history.push('/login')
+
+} catch (err) {
+  alert("Something Wrong")
+}    
+      
+        
+  }
+  const pressEnter = (e) => {
+    let code = e.keyCode || e.which;
+    if (code === 13) {
+      handleSignup();
+    }
+  }
   return (
     <div>
       <div
@@ -144,6 +156,7 @@ export default function Register(props) {
                       }}
                       inputProps={{
                         type: "password",
+                        onKeyPress: (e) => pressEnter(e),
                         onChange: (e) => setPassword(e.target.value),
                         endAdornment: (
                           <InputAdornment position="end">

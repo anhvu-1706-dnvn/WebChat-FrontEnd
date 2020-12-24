@@ -20,12 +20,14 @@ function UIChat() {
   const listConversationSuccess = useSelector(state => state.conversation.listConversationSuccess);
   const token = localStorage.getItem('token');
   const [isActive, setIsActive] = useState(0);
+  const [isActive_Click, setIsActive_Click] = useState(0);
   const [message, setMessage] = useState([]);
   const [text, setText] = useState('');
   const [socket,setSocket ] = useState(null);
   const [conversationId, setConversationId] = useState();
   const [newContact, setNewContact] = useState('')
   const [localConversation, setLocalConversation] = useState([]);
+  const [lastMessage, setLastMessage] = useState();
   const setRef = useCallback(node => {
     if (node) node.scrollIntoView({smooth: true})
   },[])
@@ -36,44 +38,37 @@ function UIChat() {
     dispatch(getListUserExceptMe(token))
     dispatch(getConversation(token))
 
-    return () => newSocket.close();
+    return () => {
+      newSocket.close()
+    };
   }, [dispatch])
  
   const updateMessage = () => {
     if(socket === null) return;
     socket.on('receiveMsg', data => {
-      const arr = [...localConversation];
       setMessage(prevMessage => [
         ...prevMessage,
         {conversationId: data.conversationId, 
         text: data.text, 
         name: data.name}
       ])
-      arr.map(a => {
-        if (a.lastMessage.conversationId === data.conversationId) {
-          a.lastMessage.text = data.text;
-        }
-        return a;
-      })
-      setLocalConversation([...arr]);   
+      setLastMessage({
+        id: data.conversationId, 
+        text: data.text,
+      });
     })
   }
-  useEffect(() => {
+  useEffect(() => { 
     updateMessage();
   }, [socket, setMessage, setLocalConversation])
   
   useEffect(async() => {
     if(listConversationSuccess) {
       await showConversation(conversations[0]._id)
-    } 
-   else return;
-  }, [listConversationSuccess])
-  
-  useEffect(() => {
-    if (listConversationSuccess) {
       setLocalConversation([...conversations])
       setLoading(false);
-    }
+    } 
+   else return;
   }, [listConversationSuccess,setLocalConversation])
  
   const handleClick = () => {
@@ -85,23 +80,34 @@ function UIChat() {
   }
   const sendMessage = (text) => {
     if (socket === null || text === '') return;
-    const arr = [...localConversation];
     setMessage([
       ...message,
       {conversationId: conversationId, text, name }
     ])
+    const arr = [...localConversation];
     arr.map(a => {
       if (a.lastMessage.conversationId === conversationId) {
         a.lastMessage.text = text;
       }
       return a;
     })
+
     setLocalConversation([...arr]);
     socket.emit('send-message',{conversationId: conversationId, text, token, name })
     setText('');
-    // setLastMessages(text);
+     setLastMessage({
+       id: conversationId, 
+       text,
+     });
   }
-  const showConversation = async (id) => {
+  const pressEnter = (e) => {
+    let code = e.keyCode || e.which;
+    if (code === 13) {
+      sendMessage(e.target.value);
+    }
+  }
+  const showConversation = async (id, index) => {
+    setIsActive_Click(index);
     if (socket === null) return;
     setMessage([]);
     const headers = {
@@ -110,12 +116,15 @@ function UIChat() {
     }
     const res = await axios.get(`${process.env.REACT_APP_API_ENDPOINT}/conversation/message`, {headers});
     setMessage(res.data.arrayMes);
+    setLastMessage({
+      id: id,
+      text: res.data.arrayMes[res.data.arrayMes.length - 1].text
+    });
     socket.emit('join-room', {conversationId: id})
     setConversationId(id);
-    //console.log(res)
+    console.log(res)
   }
   const addContact = async () => {
-    console.log(newContact);
     const dataPost = {
       recipientName: newContact,
       text: 'Hello there'
@@ -125,10 +134,11 @@ function UIChat() {
         token: token,
     };
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_ENDPOINT}/conversation`, dataPost, {headers});
-     // console.log(res);
+      await axios.post(`${process.env.REACT_APP_API_ENDPOINT}/conversation`, dataPost, {headers});
+      // console.log(res);
       dispatch(getConversation(token))
     } catch (err) {
+      alert(err.response.data.message);
       console.error(err);
     } 
     
@@ -158,15 +168,15 @@ function UIChat() {
                    return (
                 <div 
                   key={index} 
-                  className={isActive === index ? "chat_list active_chat": "chat_list"} 
-                   onClick={()=> showConversation(conversation._id)} 
+                  className={isActive === index || isActive_Click === index ? "chat_list active_chat": "chat_list"} 
+                   onClick={()=> showConversation(conversation._id, index)} 
                   onMouseOver={() => handleHover(index)}
                 >
                   <div className="chat_people">
                     <div className="chat_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"/> </div>
                     <div className="chat_ib">
                       <h5>{conversation.participants.find(p => p.name !== name).name} <span className="chat_date">Dec 25</span></h5>
-                   <p>{conversation.lastMessage.text}</p>
+                   <p>{lastMessage?.id !== conversation._id ? conversation.lastMessage.text : lastMessage.text}</p>
                     </div>
                   </div>
                 </div>
@@ -200,7 +210,13 @@ function UIChat() {
           </div>
           <div className="type_msg">
             <div className="input_msg_write">
-              <input type="text" className="write_msg" placeholder="Type a message" value={text} onChange={(e) => setText(e.target.value)}/>
+              <input type="text" 
+              className="write_msg" 
+              placeholder="Type a message" 
+              value={text} 
+              onChange={(e) => setText(e.target.value)} 
+              onKeyPress= {(e) => pressEnter(e)}
+              />
               <button onClick = {(e)=> sendMessage(text)} className="msg_send_btn" type="button"><i className="fas fa-paper-plane" aria-hidden="true"></i></button>
               <button onClick={() => history.push({pathname: '/video', state: {conversationId}})}  className="msg_send_btn1" type="button"><i className="fas fa-video" aria-hidden="true"></i></button>
             </div>

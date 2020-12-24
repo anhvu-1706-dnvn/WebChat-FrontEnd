@@ -18,6 +18,8 @@ export default function (state = initialState, action) {
     case conversationActionTypes.GET_LIST_CONVERSATION_ATTEMPT:
       return {
         ...state,
+        listConversationSuccess: false,
+        listConversationFailure: false,
         loading: true,
       };
     case conversationActionTypes.GET_LIST_CONVERSATION_SUCCESS:

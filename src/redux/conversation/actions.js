@@ -84,7 +84,6 @@ export function getConversation(senderToken) {
     try {
       const res = await axios.get(`${process.env.REACT_APP_API_ENDPOINT}/conversation`, axiosConfig);
       const conversation = res.data.conversation;
-      console.log('CON: ',conversation)
       dispatch(getListConversationSuccess(conversation));
     }catch(error) {
         console.error('err: ',error);

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react'
 import { useHistory, useLocation } from 'react-router-dom';
 import io from 'socket.io-client'
+import './VideoChat.css'
 export default function VideoChat() {
   // const pc_config = null
   const history = useHistory();
@@ -14,7 +15,6 @@ export default function VideoChat() {
   }
   const localVideoRef = useRef();
   const remoteVideoRef = useRef()
-  const textRef = useRef()
   const [pc, setPc] = useState(new RTCPeerConnection(pc_config))
   const [socket, setSocket] = useState(() => io(`${process.env.REACT_APP_API_SOCKET}/webrtcPeer`));
   const id = location.state.conversationId
@@ -44,23 +44,24 @@ export default function VideoChat() {
       sendToPeer('offerOrAnswer',sdp);
     }, err => {})
   }
-  // const addCandidate = () => {
-  //   candidates.forEach(candidate => {
-  //     console.log(JSON.stringify(candidate));
-  //     pc.addIceCandidate(new RTCIceCandidate(candidate));
-  //   })
-  // }
-  // const setRemoteDescription = () => {
-  //   const desc = JSON.parse(textRef.current.value);
-  //   pc.setRemoteDescription(new RTCSessionDescription(desc))
-  // }
+  function goBack(localVideoRef) {
+    const stream = localVideoRef.current.srcObject;
+    const tracks = stream.getTracks();
+  
+    tracks.forEach(function(track) {
+      track.stop();
+    });
+  
+    localVideoRef.current.srcObject = null;
+    history.goBack()
+  }
   useEffect( () => {
     const id = location.state.conversationId;
     if (socket === null) return;
     socket.emit('join-room', {conversationId: id}) 
     const constraints = {
       video: true,
-      audio: true,
+      // audio: {'echoCancellation': true},
     }
     const success = (stream) => {
       window.localStream = stream
@@ -73,9 +74,12 @@ export default function VideoChat() {
     navigator.mediaDevices.getUserMedia(constraints) 
       .then(success)
       .catch(failure )
-    // console.log(pc)
-    
-    return () => socket.close();
+    // navigator.mediaDevices.getUserMedia(constraints) 
+    //   .then({video:false, audio:false})
+      
+    return () => {
+      socket.close();  
+    }
   }, [])
   useEffect(() => {
     pc.onicecandidate = (e) => {
@@ -87,9 +91,10 @@ export default function VideoChat() {
     } 
     pc.oniceconnectionstatechange = (e) => {
       console.log(e)
+      // remoteVideoRef.current.srcObject = '';
     }
     pc.ontrack = (e) => {
-      remoteVideoRef.current.srcObject = e.streams[0]
+     remoteVideoRef.current.srcObject = e.streams[0]
     }
   
   }, [pc])
@@ -99,42 +104,41 @@ export default function VideoChat() {
       console.log(success)
     })    
     socket.on('offerOrAnswer', (sdp) => {
-      textRef.current.value = JSON.stringify(sdp);
+      // textRef.current.value = JSON.stringify(sdp);
       pc.setRemoteDescription(new RTCSessionDescription(sdp))
     })
     socket.on('candidate', (candidate) => {
-       console.log(candidate)
+      //  console.log(candidate)
       // setCandidates(prev => [...prev, candidate]);
-      pc.addIceCandidate(new RTCIceCandidate(candidate));
+       pc.addIceCandidate(new RTCIceCandidate(candidate));
     })
   }, [socket])
-  return (
-    <div>
-      <video
-      style = {{
-        width: 240,
-        height: 240,
-        margin: 5,
-        backgroundColor: 'black'
-      }} 
-      ref = {localVideoRef} 
-      autoPlay></video>
-      <video
-      style = {{
-        width: 240,
-        height: 240,
-        margin: 5,
-        backgroundColor: 'black'
-      }} 
-      ref = {remoteVideoRef} 
-      autoPlay></video>
-      <br />
-    <button onClick = {() => createOffer()}> Offer </button>
-    <button onClick = {() => createAnswer()}> Answer </button>
-    <br />
-    <textarea ref = {ref => textRef.current = ref} />
-    <br />
-   
-    </div>
+  const RemoteVideo = () => (
+    <video
+    id = {"myVideo"}
+    ref = {remoteVideoRef} 
+    autoPlay controls="false"></video>
   )
+  return (
+   
+    <div>
+      <RemoteVideo />
+  <div class="content">
+        <video
+        style={{
+          width: 300, 
+          height: 300,
+        }}
+        ref = {localVideoRef} 
+        autoPlay  controls={false}>
+        </video>
+    <div id = {"buttonWrapper"}>
+     <button id="myBtn"  onClick = {() => createOffer()}> Offer </button>
+     <button id="myBtn" onClick = {() => createAnswer()}> Answer </button>
+     <button id="myBtn" onClick = {() => goBack(localVideoRef)}> Back </button>
+     </div>
+  </div>
+   </div>  
+   )
+
 }
