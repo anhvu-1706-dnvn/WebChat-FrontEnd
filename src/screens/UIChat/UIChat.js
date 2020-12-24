@@ -63,7 +63,7 @@ function UIChat() {
   }, [socket, setMessage, setLocalConversation])
   
   useEffect(async() => {
-    if(listConversationSuccess) {
+    if(listConversationSuccess && conversations.length > 0) {
       await showConversation(conversations[0]._id)
       setLocalConversation([...conversations])
       setLoading(false);
@@ -144,7 +144,7 @@ function UIChat() {
     
     }
   
-  return !loading ?  (
+  return (
      <div className="container">
 <h3 className=" text-center">Messaging</h3>
 <div className="messaging">
@@ -162,29 +162,32 @@ function UIChat() {
                 </span> </div>
             </div>
           </div>
-          <div className="inbox_chat">
-             { localConversation.map((conversation,index) => 
-                 {
-                   return (
-                <div 
-                  key={index} 
-                  className={isActive === index || isActive_Click === index ? "chat_list active_chat": "chat_list"} 
-                   onClick={()=> showConversation(conversation._id, index)} 
-                  onMouseOver={() => handleHover(index)}
-                >
-                  <div className="chat_people">
-                    <div className="chat_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"/> </div>
-                    <div className="chat_ib">
-                      <h5>{conversation.participants.find(p => p.name !== name).name} <span className="chat_date">Dec 25</span></h5>
-                   <p>{lastMessage?.id !== conversation._id ? conversation.lastMessage.text : lastMessage.text}</p>
+          {!loading ? (
+              <div className="inbox_chat">
+              { localConversation.map((conversation,index) => 
+                  {
+                    return (
+                  <div 
+                    key={index} 
+                    className={isActive === index || isActive_Click === index ? "chat_list active_chat": "chat_list"} 
+                    onClick={()=> showConversation(conversation._id, index)} 
+                    onMouseOver={() => handleHover(index)}
+                  >
+                    <div className="chat_people">
+                      <div className="chat_img"> <img src="https://ptetutorials.com/images/user-profile.png" alt="sunil"/> </div>
+                      <div className="chat_ib">
+                        <h5>{conversation.participants.find(p => p.name !== name).name} <span className="chat_date">Dec 25</span></h5>
+                    <p>{lastMessage?.id !== conversation._id ? conversation.lastMessage.text : lastMessage.text}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )})}
-            {/* })} */}
-          </div>
+                )})}
+              </div>
+          ) : null}
+         
         </div>
-        <div className="mesgs">
+        {!loading ? (
+          <div className="mesgs">
           <div className="msg_history">
             {message.map((mes,index) => {
               const lastMessage = message.length - 1 === index;
@@ -222,16 +225,17 @@ function UIChat() {
             </div>
           </div>
         </div>
+        ): null}
+        
       </div>
       
       <div className="button">
-
       <button type="button" className="btn btn-secondary btn-lg" onClick={() => handleClick()}>Logout</button>
       </div>
       
     </div></div>
    
-  ) : null
+  ) 
   }
 
 export default UIChat;
