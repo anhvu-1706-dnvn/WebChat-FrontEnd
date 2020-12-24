@@ -61,6 +61,7 @@ export default function VideoChat() {
     socket.emit('join-room', {conversationId: id}) 
     const constraints = {
       video: true,
+      audio: true,
       // audio: {'echoCancellation': true},
     }
     const success = (stream) => {
