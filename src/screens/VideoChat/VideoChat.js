@@ -130,6 +130,7 @@ export default function VideoChat() {
           width: 300, 
           height: 300,
         }}
+        muted
         ref = {localVideoRef} 
         autoPlay  controls={false}>
         </video>
