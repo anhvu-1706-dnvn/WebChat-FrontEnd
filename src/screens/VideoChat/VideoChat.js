@@ -75,9 +75,6 @@ export default function VideoChat() {
     navigator.mediaDevices.getUserMedia(constraints) 
       .then(success)
       .catch(failure )
-    // navigator.mediaDevices.getUserMedia(constraints) 
-    //   .then({video:false, audio:false})
-      
     return () => {
       socket.close();  
     }
@@ -85,8 +82,6 @@ export default function VideoChat() {
   useEffect(() => {
     pc.onicecandidate = (e) => {
       if (e.candidate) { 
-        console.log(123)
-        // console.log(JSON.stringify(e.candidate))
       sendToPeer('candidate', e.candidate)
       }
     } 
@@ -105,13 +100,12 @@ export default function VideoChat() {
       console.log(success)
     })    
     socket.on('offerOrAnswer', (sdp) => {
-      // textRef.current.value = JSON.stringify(sdp);
       pc.setRemoteDescription(new RTCSessionDescription(sdp))
+        
     })
     socket.on('candidate', (candidate) => {
-      //  console.log(candidate)
-      // setCandidates(prev => [...prev, candidate]);
-       pc.addIceCandidate(new RTCIceCandidate(candidate));
+      if (candidate)
+         pc.addIceCandidate(new RTCIceCandidate(candidate));
     })
   }, [socket])
   const RemoteVideo = () => (
