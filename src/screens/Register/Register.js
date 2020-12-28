@@ -51,9 +51,9 @@ try {
         'Content-Type': 'application/json',
       }
   })
-  console.log(res);
-  // alert ('Create Successfully')
-  // history.push('/login')
+  // console.log(res);
+  alert ('Create Successfully')
+  history.push('/login')
 
 } catch (err) {
   alert("Something Wrong")
