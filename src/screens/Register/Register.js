@@ -44,16 +44,16 @@ export default function Register(props) {
     const userValues = {name,email,password}
     console.log(userValues)
 try {
-
-  const res = axios.post(`${process.env.REACT_APP_API_ENDPOINT}/auth/signup`, userValues, {
+  const res = await axios.post(`${process.env.REACT_APP_API_ENDPOINT}/auth/signup`, userValues, {
     headers: {
       method: 'POST',
       Accept: 'application/json',
         'Content-Type': 'application/json',
       }
   })
-  alert ('Create Successfully')
-  history.push('/login')
+  console.log(res);
+  // alert ('Create Successfully')
+  // history.push('/login')
 
 } catch (err) {
   alert("Something Wrong")
